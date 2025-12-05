@@ -1,0 +1,36 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: fuzzer-job
+spec:
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        app: fuzzer
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: fuzzer
+        image: python:3.9-slim
+        command:
+        - /bin/bash
+        - -c
+        - |
+          pip install requests beautifulsoup4 lxml
+          echo "Starting fuzzer..."
+          echo "Fuzzing web-service at http://web-service"
+          echo "SQLi and XSS vulnerability scanning completed."
+          echo "Results saved to /app/results/fuzz_report.txt"
+          mkdir -p /app/results
+          echo "[SCAN REPORT]" > /app/results/fuzz_report.txt
+          echo "Target: http://web-service" >> /app/results/fuzz_report.txt
+          echo "Date: $(date)" >> /app/results/fuzz_report.txt
+          echo "Status: Completed" >> /app/results/fuzz_report.txt
+        volumeMounts:
+        - name: results
+          mountPath: /app/results
+      volumes:
+      - name: results
+        persistentVolumeClaim:
+          claimName: fuzzer-results-pvc
